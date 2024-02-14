@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#edits the clip board input file ~/.local/share/klipper/history2.lst and the second in is the item
 file="$1"
 if [ $2 = "-l" ]
 then
