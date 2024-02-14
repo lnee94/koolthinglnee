@@ -1,0 +1,58 @@
+#!/bin/bash
+
+
+set -e
+deviceid="$1"
+action="$2"
+commandid="$3"
+name="$4"
+command="$5"
+
+
+
+
+
+
+
+file="$HOME/.config/kdeconnect/$deviceid/kdeconnect_runcommand/config"
+
+
+
+
+
+
+k="$(cat "$file" | sed 's/commands="@ByteArray(/commands="@ByteArray(\n/g' | tail -1)"
+kk="$(echo -n "$k" | head -c "$(($(echo -n "$k" | wc -c)-2))" | sed 's/\\"/"/g' )"
+iud="$commandid"
+# iud="$(echo "$kk" | jq . | grep -B1 "id=$id" | head -1 | awk -F\" '{print $2}')"
+
+
+if [ "$action" = "dump" ]
+then
+echo "$kk"
+oo="$kk"
+fi
+if [ "$action" = "add" ]
+then
+oo="$(echo "$kk" | jq -c ". += {\"$iud\": {\"name\": \"$name\",\"command\": \"$command\"}}")"
+fi
+if [ "$action" = "editname" ]
+then
+oo="$(echo "$kk" | jq -c ".\"$iud\".name = \"$4\" ")"
+fi
+if [ "$action" = "editcom" ]
+then
+oo="$(echo "$kk" | jq -c ".\"$iud\".command = \"$4\" ")"
+fi
+if [ "$action" = "del" ]
+then
+oo="$(echo "$kk" | jq -c "del(.\"$iud\")")"
+fi
+
+
+
+o="$(echo "$oo" | sed 's/"/\\"/g')"
+out="[General]
+commands=\"@ByteArray($o)\""
+echo "$out" > "$file"
+dbus-send --session --type=method_call  --dest=org.kde.kdeconnect.daemon /modules/kdeconnect/devices/$deviceid org.kde.kdeconnect.device.reloadPlugins
